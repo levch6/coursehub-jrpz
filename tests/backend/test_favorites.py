@@ -33,6 +33,14 @@ def test_hidden_course_is_not_listed_in_favorites(auth_api, user, course):
     assert auth_api.get("/api/favorites/").data["count"] == 0
 
 
+def test_hidden_course_can_still_be_removed_from_favorites(auth_api, user, course):
+    favorite = Favorite.objects.create(user=user, course=course)
+    course.is_hidden = True
+    course.save()
+    assert auth_api.delete(f"/api/favorites/{favorite.pk}/").status_code == 204
+    assert not Favorite.objects.exists()
+
+
 def test_remove_favorite(auth_api, user, course):
     favorite = Favorite.objects.create(user=user, course=course)
     assert auth_api.delete(f"/api/favorites/{favorite.pk}/").status_code == 204

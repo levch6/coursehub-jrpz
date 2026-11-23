@@ -18,10 +18,14 @@ class FavoriteViewSet(
     filter_backends: list = []
 
     def get_queryset(self):
-        # Курси, приховані адміністратором (ФВ-23), не показуються і в обраному.
-        return Favorite.objects.filter(
-            user=self.request.user, course__is_hidden=False
-        ).select_related("course__platform", "course__category")
+        queryset = Favorite.objects.filter(user=self.request.user).select_related(
+            "course__platform", "course__category"
+        )
+        if self.action == "list":
+            # Курси, приховані адміністратором (ФВ-23), не показуються і в обраному,
+            # але користувач і далі може прибрати такий запис зі свого обраного.
+            queryset = queryset.filter(course__is_hidden=False)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         """Додає курс в обране: 201 для нового запису, 200, якщо курс уже там."""
