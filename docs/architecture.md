@@ -34,8 +34,9 @@ flowchart LR
 
 ## Потік збору даних
 
-1. Celery Beat за розкладом (щодня о 03:00) або адміністратор через
-   `POST /api/admin/collection/{platform}/run/` ставить у чергу задачу `run_collection`.
+1. Celery Beat за розкладом (щодня о 03:00) запускає задачу `run_all_collections`, яка ставить
+   у чергу `run_collection` для кожної зареєстрованої платформи; адміністратор може запустити
+   `run_collection` для однієї платформи через `POST /api/admin/collection/{platform}/run/`.
 2. Воркер створює `CollectionService`, який отримує збирач із реєстру за ідентифікатором платформи.
 3. Збирач повертає потік записів `CourseDTO`.
 4. `DjangoCourseRepository` створює або оновлює курси за парою «платформа та зовнішній

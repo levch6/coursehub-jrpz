@@ -118,7 +118,7 @@ cd src/frontend && npm run typecheck && npm test && npm run build
 | `POST /api/auth/register/`, `POST /api/auth/token/` | реєстрація та вхід (JWT) | усі |
 | `GET /api/courses/`, `GET /api/courses/{id}/` | каталог із пошуком `q`, фільтрами `platform`, `category`, `max_price`, `min_rating` і сортуванням `ordering` | усі |
 | `GET /api/categories/` | категорії | усі |
-| `GET/POST/DELETE /api/favorites/` | обране | авторизовані |
+| `GET /api/favorites/`, `POST /api/favorites/`, `DELETE /api/favorites/{id}/` | обране | авторизовані |
 | `GET /api/admin/stats/`, `GET /api/admin/collection/runs/` | статистика й журнал збору | адміністратор |
 | `POST /api/admin/collection/{platform}/run/` | ручний запуск збору | адміністратор |
 | `PATCH /api/admin/courses/{id}/` | редагування й приховування курсу | адміністратор |
