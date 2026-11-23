@@ -1,0 +1,16 @@
+# Контекст збірки Docker: лише те, що потрібно образам.
+.git
+.github
+.env
+.venv
+venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/*.sqlite3
+src/backend/staticfiles
+src/backend/media
+src/frontend/node_modules
+src/frontend/dist
+src/frontend/coverage
