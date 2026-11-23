@@ -6,6 +6,7 @@
 (принцип відкритості/закритості, НФВ-05).
 """
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from typing import Any, ClassVar
@@ -14,6 +15,8 @@ from .dto import CourseDTO
 from .errors import ParseError
 from .fetching import Fetcher
 
+logger = logging.getLogger(__name__)
+
 
 class CourseCollector(ABC):
     """Збирач курсів однієї платформи."""
@@ -21,6 +24,8 @@ class CourseCollector(ABC):
     platform: ClassVar[str]
 
     def __init__(self, fetcher: Fetcher) -> None:
+        if not getattr(type(self), "platform", ""):
+            raise TypeError(f"{type(self).__name__} має задати атрибут класу platform")
         self._fetcher = fetcher
 
     @abstractmethod
@@ -52,6 +57,13 @@ class PagedJsonCollector(CourseCollector):
         """Перетворює один сирий елемент на ``CourseDTO``."""
 
     def fetch(self) -> Iterator[CourseDTO]:
+        """Обходить сторінки, доки платформа не поверне порожню сторінку.
+
+        Якщо досягнуто ``max_pages``, а остання сторінка ще містила елементи,
+        обхід зупиняється з попередженням у журналі: дані можуть бути неповними.
+        Один некоректний елемент спричиняє ``ParseError`` і перериває збирання
+        всієї платформи, щоб помилку формату не було пропущено непомітно.
+        """
         for page in range(1, self.max_pages + 1):
             position = (page - 1) * self.page_size if self.offset_pagination else page
             payload = self._fetcher.get_json(
@@ -65,6 +77,11 @@ class PagedJsonCollector(CourseCollector):
                 return
             for raw in items:
                 yield self._parse(raw)
+        logger.warning(
+            "%s: досягнуто ліміту в %d сторінок, дані можуть бути неповними",
+            self.platform,
+            self.max_pages,
+        )
 
     def _parse(self, raw: dict[str, Any]) -> CourseDTO:
         try:

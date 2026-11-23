@@ -28,13 +28,17 @@ class RequestsFetcher:
         user_agent: str = "CourseHubBot/0.1 (навчальний проєкт)",
     ) -> None:
         self._session = session or requests.Session()
-        # Сесія requests уже має типовий User-Agent, тому setdefault його не замінив би.
-        self._session.headers["User-Agent"] = user_agent
+        # Заголовок передається в кожному запиті, а не записується в сесію, щоб не
+        # змінювати сесію, яку передав викликач. Заголовки запиту мають пріоритет
+        # над типовим User-Agent сесії requests.
+        self._headers = {"User-Agent": user_agent}
         self._timeout = timeout
 
     def get_json(self, url: str, params: dict[str, Any] | None = None) -> Any:
         try:
-            response = self._session.get(url, params=params, timeout=self._timeout)
+            response = self._session.get(
+                url, params=params, headers=self._headers, timeout=self._timeout
+            )
             response.raise_for_status()
             return response.json()
         except (requests.RequestException, ValueError) as exc:

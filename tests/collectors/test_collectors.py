@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 import pytest
@@ -139,14 +140,55 @@ def test_unexpected_data_is_reported_as_parse_error(page):
         list(UdemyCollector(FakeFetcher([page])).fetch())
 
 
-def test_requests_fetcher_sends_its_own_user_agent():
+def test_requests_fetcher_sends_its_own_user_agent_without_mutating_session():
     import requests
 
     from collectors.fetching import RequestsFetcher
 
-    session = requests.Session()
-    RequestsFetcher(session=session, user_agent="CourseHubBot/test")
-    assert session.headers["User-Agent"] == "CourseHubBot/test"
+    sent = {}
+
+    class RecordingSession(requests.Session):
+        def get(self, url, **kwargs):
+            sent.update(kwargs)
+            response = requests.Response()
+            response.status_code = 200
+            response._content = b"{}"
+            return response
+
+    session = RecordingSession()
+    original_agent = session.headers["User-Agent"]
+    assert RequestsFetcher(session=session, user_agent="CourseHubBot/test").get_json("u") == {}
+    assert sent["headers"]["User-Agent"] == "CourseHubBot/test"
+    assert session.headers["User-Agent"] == original_agent
+
+
+def test_page_limit_is_logged_as_warning(caplog):
+    class Endless:
+        def get_json(self, url, params=None):
+            return UDEMY_PAGE
+
+    class Limited(UdemyCollector):
+        max_pages = 2
+
+    with caplog.at_level(logging.WARNING, logger="collectors.base"):
+        list(Limited(Endless()).fetch())
+    assert "udemy" in caplog.text
+    assert "2" in caplog.text
+
+
+def test_no_warning_when_pages_run_out(caplog):
+    with caplog.at_level(logging.WARNING, logger="collectors.base"):
+        list(UdemyCollector(FakeFetcher([UDEMY_PAGE, {"results": []}])).fetch())
+    assert not caplog.records
+
+
+def test_collector_without_platform_cannot_be_created():
+    class Nameless(CourseCollector):
+        def fetch(self):
+            return iter(())
+
+    with pytest.raises(TypeError, match="platform"):
+        Nameless(FakeFetcher([]))
 
 
 def _udemy_item(**overrides):
