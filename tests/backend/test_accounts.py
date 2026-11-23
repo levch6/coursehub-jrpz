@@ -25,6 +25,37 @@ def test_register_rejects_duplicate_email(api, user):
     assert response.status_code == 400
 
 
+def test_register_rejects_password_similar_to_email(api):
+    response = api.post(
+        "/api/auth/register/", {"email": "johnsmith2024@example.com", "password": "johnsmith2024"}
+    )
+    assert response.status_code == 400
+    assert "password" in response.data
+
+
+def test_register_stores_email_in_lowercase(api):
+    response = api.post(
+        "/api/auth/register/", {"email": "New.User@Example.COM", "password": "StrongPass123"}
+    )
+    assert response.status_code == 201
+    assert get_user_model().objects.get().email == "new.user@example.com"
+
+
+def test_register_rejects_email_differing_only_by_case(api, user):
+    response = api.post(
+        "/api/auth/register/", {"email": "USER@Example.com", "password": "StrongPass123"}
+    )
+    assert response.status_code == 400
+    assert get_user_model().objects.count() == 1
+
+
+def test_login_ignores_email_case(api, user):
+    response = api.post(
+        "/api/auth/token/", {"email": "User@EXAMPLE.com", "password": "StrongPass123"}
+    )
+    assert response.status_code == 200
+
+
 def test_login_returns_jwt_pair(api, user):
     response = api.post("/api/auth/token/", {"email": user.email, "password": "StrongPass123"})
     assert response.status_code == 200

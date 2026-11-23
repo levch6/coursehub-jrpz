@@ -17,8 +17,6 @@ from rest_framework.test import APIClient  # noqa: E402
 
 from apps.catalog.models import Category, Course, Platform  # noqa: E402
 
-pytestmark = pytest.mark.django_db
-
 
 @dataclass(frozen=True)
 class FakeRecord:

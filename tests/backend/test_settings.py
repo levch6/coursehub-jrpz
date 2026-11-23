@@ -18,6 +18,12 @@ def test_prod_settings_require_secret_key(monkeypatch):
         _import_prod_settings()
 
 
+def test_prod_settings_reject_placeholder_secret_key(monkeypatch):
+    monkeypatch.setenv("DJANGO_SECRET_KEY", "change-me")
+    with pytest.raises(ImproperlyConfigured):
+        _import_prod_settings()
+
+
 def test_prod_settings_use_secret_key_from_environment(monkeypatch):
     monkeypatch.setenv("DJANGO_SECRET_KEY", "a-real-secret-from-the-environment")
     prod = _import_prod_settings()

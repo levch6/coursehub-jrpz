@@ -7,6 +7,18 @@ from django.db import models
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    @classmethod
+    def normalize_email(cls, email: str | None) -> str:
+        """Пошта зберігається в нижньому регістрі повністю, а не лише домен.
+
+        Інакше адреси, що відрізняються лише регістром, дали б два облікові записи.
+        """
+        return super().normalize_email(email).strip().lower()
+
+    def get_by_natural_key(self, username: str | None):
+        # Вхід без урахування регістру; iexact знаходить і записи, створені до нормалізації.
+        return self.get(**{f"{self.model.USERNAME_FIELD}__iexact": username})
+
     def _create_user(self, email: str, password: str | None, **extra):
         if not email:
             raise ValueError("Електронна пошта є обов'язковою")
