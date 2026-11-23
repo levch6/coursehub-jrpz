@@ -18,12 +18,16 @@ class EdxCollector(PagedJsonCollector):
         return list(payload.get("objects", []))
 
     def parse_item(self, raw: dict[str, Any]) -> CourseDTO:
+        subject = raw.get("subject")
+        # Предмет може прийти як рядок або як об'єкт із полем «name».
+        if isinstance(subject, dict):
+            subject = subject.get("name")
         return CourseDTO(
-            external_id=raw["key"],
+            external_id=str(raw["key"]),
             title=raw["title"],
-            description=raw.get("short_description", ""),
+            description=raw.get("short_description") or "",
             url=raw["marketing_url"],
-            category=raw.get("subject"),
+            category=subject or None,
             language=normalize_language(raw.get("language")),
             level=normalize_level(raw.get("level_type")),
         )

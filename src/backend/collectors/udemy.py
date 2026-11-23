@@ -5,10 +5,11 @@
 """
 
 from typing import Any, ClassVar
+from urllib.parse import urljoin
 
 from .base import PagedJsonCollector
 from .dto import CourseDTO
-from .parsing import normalize_language, normalize_level, to_decimal
+from .parsing import detect_currency, normalize_language, normalize_level, to_decimal
 
 
 class UdemyCollector(PagedJsonCollector):
@@ -19,13 +20,21 @@ class UdemyCollector(PagedJsonCollector):
         return list(payload.get("results", []))
 
     def parse_item(self, raw: dict[str, Any]) -> CourseDTO:
+        price = raw.get("price")
+        path = raw["url"]
+        # urljoin мовчки повернув би головну сторінку для порожнього значення.
+        if not isinstance(path, str) or not path.strip():
+            raise ValueError(f"порожня або некоректна адреса курсу: {path!r}")
         return CourseDTO(
             external_id=str(raw["id"]),
             title=raw["title"],
-            description=raw.get("headline", ""),
-            url="https://www.udemy.com" + raw["url"],
-            category=raw.get("category"),
-            price=to_decimal(raw.get("price")),
+            description=raw.get("headline") or "",
+            # urljoin коректно обробляє і відносні шляхи, і вже абсолютні адреси.
+            url=urljoin("https://www.udemy.com/", path),
+            category=raw.get("category") or None,
+            price=to_decimal(price),
+            # Валюту видно лише з символу в рядковій ціні, інакше вважаємо USD.
+            currency=detect_currency(price) or "USD",
             rating=to_decimal(raw.get("avg_rating")),
             language=normalize_language(raw.get("locale")),
             level=normalize_level(raw.get("instructional_level")),

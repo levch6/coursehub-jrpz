@@ -24,9 +24,9 @@ class CourseraCollector(PagedJsonCollector):
         return CourseDTO(
             external_id=str(raw["id"]),
             title=raw["name"],
-            description=raw.get("description", ""),
+            description=raw.get("description") or "",
             url=f"https://www.coursera.org/learn/{raw['slug']}",
-            category=(raw.get("domainTypes") or [{}])[0].get("domainId"),
+            category=(raw.get("domainTypes") or [{}])[0].get("domainId") or None,
             price=None,  # багато курсів Coursera безкоштовні для перегляду
             language=normalize_language(raw.get("primaryLanguages")),
             level=normalize_level(raw.get("level")),

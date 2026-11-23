@@ -147,3 +147,80 @@ def test_requests_fetcher_sends_its_own_user_agent():
     session = requests.Session()
     RequestsFetcher(session=session, user_agent="CourseHubBot/test")
     assert session.headers["User-Agent"] == "CourseHubBot/test"
+
+
+def _udemy_item(**overrides):
+    return {**UDEMY_PAGE["results"][0], **overrides}
+
+
+@pytest.mark.parametrize(
+    ("raw_url", "expected"),
+    [
+        ("/course/python-bootcamp/", "https://www.udemy.com/course/python-bootcamp/"),
+        ("course/python-bootcamp/", "https://www.udemy.com/course/python-bootcamp/"),
+        ("https://www.udemy.com/course/abs/", "https://www.udemy.com/course/abs/"),
+    ],
+)
+def test_udemy_builds_absolute_url(raw_url, expected):
+    fetcher = FakeFetcher([{"results": [_udemy_item(url=raw_url)]}])
+    assert next(UdemyCollector(fetcher).fetch()).url == expected
+
+
+@pytest.mark.parametrize("raw_url", [None, "", "   "])
+def test_udemy_rejects_missing_url(raw_url):
+    fetcher = FakeFetcher([{"results": [_udemy_item(url=raw_url)]}])
+    with pytest.raises(ParseError):
+        list(UdemyCollector(fetcher).fetch())
+
+
+@pytest.mark.parametrize(
+    ("price", "currency", "amount"),
+    [
+        ("€19,99", "EUR", Decimal("19.99")),
+        ("$19.99", "USD", Decimal("19.99")),
+        (19.99, "USD", Decimal("19.99")),
+        (None, "USD", None),
+    ],
+)
+def test_udemy_takes_currency_from_price_symbol(price, currency, amount):
+    fetcher = FakeFetcher([{"results": [_udemy_item(price=price)]}])
+    course = next(UdemyCollector(fetcher).fetch())
+    assert course.currency == currency
+    assert course.price == amount
+
+
+def test_explicit_nulls_become_empty_values():
+    udemy = FakeFetcher([{"results": [_udemy_item(headline=None, category=None)]}])
+    course = next(UdemyCollector(udemy).fetch())
+    assert (course.description, course.category) == ("", None)
+
+    raw = {**COURSERA_PAGE["elements"][0], "description": None, "domainTypes": None}
+    course = next(CourseraCollector(FakeFetcher([{"elements": [raw]}])).fetch())
+    assert (course.description, course.category) == ("", None)
+
+    raw = {**EDX_PAGE["objects"][0], "short_description": None, "subject": None}
+    course = next(EdxCollector(FakeFetcher([{"objects": [raw]}])).fetch())
+    assert (course.description, course.category) == ("", None)
+
+
+@pytest.mark.parametrize(
+    ("subject", "expected"),
+    [({"name": "Computer Science", "uuid": "x"}, "Computer Science"), ({}, None)],
+)
+def test_edx_subject_object_is_reduced_to_name(subject, expected):
+    raw = {**EDX_PAGE["objects"][0], "subject": subject}
+    course = next(EdxCollector(FakeFetcher([{"objects": [raw]}])).fetch())
+    assert course.category == expected
+
+
+def test_edx_numeric_key_is_converted_to_string():
+    raw = {**EDX_PAGE["objects"][0], "key": 42}
+    course = next(EdxCollector(FakeFetcher([{"objects": [raw]}])).fetch())
+    assert course.external_id == "42"
+
+
+@pytest.mark.parametrize("key", ["", "   "])
+def test_edx_blank_key_is_parse_error(key):
+    raw = {**EDX_PAGE["objects"][0], "key": key}
+    with pytest.raises(ParseError):
+        list(EdxCollector(FakeFetcher([{"objects": [raw]}])).fetch())
