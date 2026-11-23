@@ -35,4 +35,11 @@ describe('CourseCard', () => {
     renderCard(makeCourse({ is_available: false }));
     expect(screen.getByText('Курс недоступний')).toBeInTheDocument();
   });
+
+  it('використовує заголовок другого рівня та підписує рейтинг', () => {
+    renderCard();
+    expect(screen.getByRole('heading', { level: 2, name: 'Python для початківців' })).toBeInTheDocument();
+    expect(screen.getByText('Рейтинг:')).toHaveClass('visually-hidden');
+    expect(screen.getByText('★')).toHaveAttribute('aria-hidden', 'true');
+  });
 });

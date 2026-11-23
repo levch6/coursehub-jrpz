@@ -15,12 +15,17 @@ export function CourseCard({ course }: CourseCardProps) {
 
   return (
     <article className="course-card">
-      <h3>
+      <h2>
         <Link to={`/courses/${course.id}`}>{course.title}</Link>
-      </h3>
+      </h2>
       <p className="course-card__meta">
         <span>{course.platform.name}</span>
-        {course.rating !== null && <span>★ {course.rating}</span>}
+        {course.rating !== null && (
+          <span>
+            <span aria-hidden="true">★</span>
+            <span className="visually-hidden">{t('rating')}:</span> {course.rating}
+          </span>
+        )}
         <span>{price}</span>
       </p>
       {!course.is_available && <p className="course-card__warning">{t('unavailable')}</p>}
