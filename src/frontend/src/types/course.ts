@@ -1,4 +1,4 @@
-/** Типи відповідей REST API серверної частини (див. src/backend/apps/catalog/serializers.py). */
+/** Типи відповідей REST API серверної частини (відповідають CourseSerializer серверної частини). */
 
 export interface Platform {
   slug: string;
@@ -34,12 +34,20 @@ export interface Page<T> {
   results: T[];
 }
 
-/** Параметри пошуку, фільтрації та сортування (ФВ-09, ФВ-10, ФВ-11). */
-export interface CourseQuery {
+/**
+ * Параметри пошуку, фільтрації та сортування (ФВ-09, ФВ-10, ФВ-11).
+ * Оголошено як type, а не interface: так об'єкт сумісний із QueryParams без приведення.
+ */
+export type CourseQuery = {
   q?: string;
   platform?: string;
   category?: string;
   max_price?: number;
+  min_rating?: number;
+  language?: string;
+  level?: string;
+  /** Передається як рядок 'true' / 'false', як очікує фільтр серверної частини. */
+  is_available?: 'true' | 'false';
   ordering?: string;
   page?: number;
-}
+};

@@ -1,5 +1,5 @@
 import type { Course, CourseQuery, Page } from '../types/course';
-import type { HttpClient, QueryParams } from './http';
+import type { HttpClient } from './http';
 
 /** Інтерфейс доступу до каталогу. Сторінки залежать від нього, а не від HTTP. */
 export interface CourseApi {
@@ -15,7 +15,7 @@ export class HttpCourseApi implements CourseApi {
   }
 
   list(query: CourseQuery = {}): Promise<Page<Course>> {
-    return this.http.get<Page<Course>>('/courses/', { ...query } as QueryParams);
+    return this.http.get<Page<Course>>('/courses/', query);
   }
 
   get(id: number): Promise<Course> {
