@@ -4,10 +4,17 @@ export type Locale = 'uk' | 'en';
 
 export const LOCALES: Locale[] = ['uk', 'en'];
 
+/** Назви мов їхньою власною мовою: однакові незалежно від поточної мови інтерфейсу. */
+export const LOCALE_NAMES: Record<Locale, string> = {
+  uk: 'Українська',
+  en: 'English',
+};
+
 const uk = {
   appName: 'CourseHub',
   navCatalog: 'Каталог',
   navLogin: 'Увійти',
+  languageLabel: 'Мова інтерфейсу',
   catalogTitle: 'Каталог курсів',
   searchPlaceholder: 'Пошук курсів за ключовими словами',
   searchButton: 'Шукати',
@@ -32,6 +39,7 @@ const en: Record<MessageKey, string> = {
   appName: 'CourseHub',
   navCatalog: 'Catalog',
   navLogin: 'Sign in',
+  languageLabel: 'Interface language',
   catalogTitle: 'Course catalog',
   searchPlaceholder: 'Search courses by keywords',
   searchButton: 'Search',

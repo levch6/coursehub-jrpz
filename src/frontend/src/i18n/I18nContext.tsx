@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { messages } from './translations';
 import type { Locale, MessageKey } from './translations';
@@ -36,6 +36,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       // ігноруємо помилки збереження
     }
   }, []);
+
+  // мова документа має відповідати мові інтерфейсу, щоб читачі екрана правильно вимовляли текст
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const value = useMemo<I18nValue>(
     () => ({ locale, setLocale, t: (key) => messages[locale][key] }),
