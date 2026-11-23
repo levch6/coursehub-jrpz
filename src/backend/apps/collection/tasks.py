@@ -10,7 +10,11 @@ from .services import CollectionService
 
 @shared_task
 def run_collection(platform_slug: str) -> int:
-    """Запускає збір для однієї платформи та повертає ідентифікатор запису в журналі."""
+    """Запускає збір для однієї платформи та повертає ідентифікатор запису в журналі.
+
+    Для невідомої платформи виникає ``UnknownPlatformError``: задача завершується
+    помилкою в Celery, а в журналі збору запис не з'являється.
+    """
     service = CollectionService(DjangoCourseRepository(), load_sources())
     return service.run(platform_slug).pk
 

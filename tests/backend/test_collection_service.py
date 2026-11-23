@@ -1,9 +1,9 @@
 import pytest
 
-from apps.catalog.models import Course
+from apps.catalog.models import Course, Platform
 from apps.catalog.repositories import DjangoCourseRepository
 from apps.collection.models import ScrapeRun
-from apps.collection.services import CollectionService
+from apps.collection.services import CollectionService, UnknownPlatformError
 
 from .conftest import FakeRecord, FakeSource, FakeSources
 
@@ -37,6 +37,17 @@ def test_failing_source_is_recorded_and_does_not_raise():
     assert "недоступний" in run.error
 
 
-def test_unknown_platform_is_recorded_as_failure():
-    run = make_service().run("unknown")
+def test_unknown_platform_raises_without_creating_records():
+    with pytest.raises(UnknownPlatformError):
+        make_service().run("unknown")
+    assert not Platform.objects.exists()
+    assert not ScrapeRun.objects.exists()
+
+
+def test_empty_source_fails_and_keeps_courses_available():
+    make_service(FakeSource("udemy", [FakeRecord("1", "A")])).run("udemy")
+    run = make_service(FakeSource("udemy", [])).run("udemy")
     assert run.status == ScrapeRun.Status.FAILED
+    assert "жодного курсу" in run.error
+    assert run.courses_unavailable == 0
+    assert Course.objects.get(external_id="1").is_available
