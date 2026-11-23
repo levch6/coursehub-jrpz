@@ -94,7 +94,7 @@ def test_edx_collector_maps_fields():
     course = next(EdxCollector(FakeFetcher([EDX_PAGE])).fetch())
     assert course.external_id == "MITx+6.00x"
     assert course.level == "beginner"
-    assert course.language == "english"
+    assert course.language == "en"
 
 
 def test_malformed_item_raises_parse_error():
