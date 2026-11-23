@@ -15,6 +15,7 @@ class CourseraCollector(PagedJsonCollector):
     endpoint: ClassVar[str] = "https://api.coursera.org/api/courses.v1"
     page_param: ClassVar[str] = "start"
     page_size_param: ClassVar[str] = "limit"
+    offset_pagination: ClassVar[bool] = True
 
     def extract_items(self, payload: Any) -> list[dict[str, Any]]:
         return list(payload.get("elements", []))

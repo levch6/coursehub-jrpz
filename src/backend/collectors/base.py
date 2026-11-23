@@ -40,6 +40,8 @@ class PagedJsonCollector(CourseCollector):
     page_size_param: ClassVar[str] = "page_size"
     page_size: ClassVar[int] = 50
     max_pages: ClassVar[int] = 100  # захист від нескінченного циклу
+    # True, якщо платформа приймає зсув від початку (0, 50, 100...), а не номер сторінки.
+    offset_pagination: ClassVar[bool] = False
 
     @abstractmethod
     def extract_items(self, payload: Any) -> list[dict[str, Any]]:
@@ -51,15 +53,21 @@ class PagedJsonCollector(CourseCollector):
 
     def fetch(self) -> Iterator[CourseDTO]:
         for page in range(1, self.max_pages + 1):
+            position = (page - 1) * self.page_size if self.offset_pagination else page
             payload = self._fetcher.get_json(
-                self.endpoint, {self.page_param: page, self.page_size_param: self.page_size}
+                self.endpoint, {self.page_param: position, self.page_size_param: self.page_size}
             )
-            items = self.extract_items(payload)
+            try:
+                items = self.extract_items(payload)
+            except (AttributeError, KeyError, TypeError, ValueError) as exc:
+                raise ParseError(f"{self.platform}: неочікуваний формат сторінки: {exc}") from exc
             if not items:
                 return
             for raw in items:
-                try:
-                    yield self.parse_item(raw)
-                except (KeyError, TypeError, ValueError) as exc:
-                    message = f"{self.platform}: неочікуваний формат елемента: {exc}"
-                    raise ParseError(message) from exc
+                yield self._parse(raw)
+
+    def _parse(self, raw: dict[str, Any]) -> CourseDTO:
+        try:
+            return self.parse_item(raw)
+        except (AttributeError, KeyError, TypeError, ValueError, ArithmeticError) as exc:
+            raise ParseError(f"{self.platform}: неочікуваний формат елемента: {exc}") from exc

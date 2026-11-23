@@ -84,6 +84,12 @@ def test_coursera_collector_uses_its_own_pagination_parameters():
     assert set(fetcher.calls[0][1]) == {"start", "limit"}
 
 
+def test_coursera_requests_offsets_not_page_numbers():
+    fetcher = FakeFetcher([COURSERA_PAGE, COURSERA_PAGE, {"elements": []}])
+    list(CourseraCollector(fetcher).fetch())
+    assert [params["start"] for _, params in fetcher.calls] == [0, 50, 100]
+
+
 def test_edx_collector_maps_fields():
     course = next(EdxCollector(FakeFetcher([EDX_PAGE])).fetch())
     assert course.external_id == "MITx+6.00x"
@@ -118,3 +124,26 @@ def test_every_registered_collector_honors_the_common_contract(platform):
     results = list(collector.fetch())
     assert results
     assert all(isinstance(item, CourseDTO) for item in results)
+
+
+@pytest.mark.parametrize(
+    "page",
+    [
+        {"results": [{**UDEMY_PAGE["results"][0], "title": None}]},
+        {"results": [{**UDEMY_PAGE["results"][0], "avg_rating": 7}]},
+        ["не словник"],
+    ],
+)
+def test_unexpected_data_is_reported_as_parse_error(page):
+    with pytest.raises(ParseError):
+        list(UdemyCollector(FakeFetcher([page])).fetch())
+
+
+def test_requests_fetcher_sends_its_own_user_agent():
+    import requests
+
+    from collectors.fetching import RequestsFetcher
+
+    session = requests.Session()
+    RequestsFetcher(session=session, user_agent="CourseHubBot/test")
+    assert session.headers["User-Agent"] == "CourseHubBot/test"
