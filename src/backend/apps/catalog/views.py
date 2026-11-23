@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 
-from .filters import CourseFilter
+from .filters import COURSE_FILTER_BACKENDS, CourseFilter
 from .models import Category, Course
 from .serializers import CategorySerializer, CourseSerializer
 
@@ -10,6 +10,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = CourseSerializer
     filterset_class = CourseFilter
+    filter_backends = COURSE_FILTER_BACKENDS
     ordering_fields = ["price", "rating", "title", "updated_at"]
 
     def get_queryset(self):

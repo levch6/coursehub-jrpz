@@ -51,6 +51,20 @@ def test_admin_can_hide_course(admin_api, api, course):
     assert api.get("/api/courses/").data["count"] == 0
 
 
+def test_admin_edit_marks_course_as_edited(admin_api, course):
+    response = admin_api.patch(f"/api/admin/courses/{course.pk}/", {"title": "Нова назва"})
+    assert response.status_code == 200
+    course.refresh_from_db()
+    assert course.is_edited
+    assert course.title == "Нова назва"
+
+
+def test_hiding_course_does_not_mark_it_edited(admin_api, course):
+    admin_api.patch(f"/api/admin/courses/{course.pk}/", {"is_hidden": True})
+    course.refresh_from_db()
+    assert not course.is_edited
+
+
 def test_run_all_collections_queues_every_platform():
     names = collection_tasks.run_all_collections()
     assert names == ["udemy"]

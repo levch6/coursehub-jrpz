@@ -47,11 +47,14 @@ class Course(models.Model):
     fingerprint = models.CharField(max_length=64, db_index=True, blank=True)
     is_available = models.BooleanField(default=True)  # ФВ-07
     is_hidden = models.BooleanField(default=False)  # ФВ-23
+    # Назву, опис або категорію змінив адміністратор (ФВ-23): збір їх не перезаписує.
+    is_edited = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-rating", "title"]
+        # Курси без рейтингу йдуть у кінці (у PostgreSQL NULL за спаданням був би першим).
+        ordering = [models.F("rating").desc(nulls_last=True), "title"]
         constraints = [
             models.UniqueConstraint(
                 fields=["platform", "external_id"], name="uniq_course_per_platform"

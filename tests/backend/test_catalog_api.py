@@ -66,3 +66,14 @@ def test_health_endpoint(api):
     response = api.get("/api/health/")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_courses_without_rating_are_listed_last(api, course, platform):
+    Course.objects.create(
+        platform=platform, external_id="2", title="Без рейтингу", url="https://example.com/2"
+    )
+    default = api.get("/api/courses/").data["results"]
+    ascending = api.get("/api/courses/", {"ordering": "rating"}).data["results"]
+    assert default[-1]["title"] == "Без рейтингу"
+    assert ascending[-1]["title"] == "Без рейтингу"
+    assert "NULLS LAST" in str(Course.objects.all().query)
