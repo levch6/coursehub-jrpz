@@ -7,3 +7,5 @@ redis>=5.2
 psycopg[binary]>=3.2
 requests>=2.32
 gunicorn>=23.0
+# Транспорт Redis у kombu імпортує packaging, але не оголошує її залежністю: без неї worker і beat не стартують.
+packaging>=24.0
