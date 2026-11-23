@@ -28,7 +28,8 @@ class RequestsFetcher:
         user_agent: str = "CourseHubBot/0.1 (навчальний проєкт)",
     ) -> None:
         self._session = session or requests.Session()
-        self._session.headers.setdefault("User-Agent", user_agent)
+        # Сесія requests уже має типовий User-Agent, тому setdefault його не замінив би.
+        self._session.headers["User-Agent"] = user_agent
         self._timeout = timeout
 
     def get_json(self, url: str, params: dict[str, Any] | None = None) -> Any:

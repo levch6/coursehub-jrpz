@@ -21,11 +21,26 @@ def to_decimal(value: Any) -> Decimal | None:
     if value is None or value == "":
         return None
     if isinstance(value, str):
-        value = value.replace("$", "").replace("€", "").replace(",", ".").strip()
+        value = _normalize_number_text(value)
     try:
-        return Decimal(str(value))
+        number = Decimal(str(value))
     except InvalidOperation:
         return None
+    # NaN і нескінченність не є коректною ціною чи рейтингом.
+    return number if number.is_finite() else None
+
+
+def _normalize_number_text(text: str) -> str:
+    """Прибирає символи валют і розрізняє кому як роздільник тисяч або дробової частини.
+
+    «1,299.99» дає «1299.99», «19,99» дає «19.99», «1,299» дає «1299».
+    """
+    text = text.replace("$", "").replace("€", "").replace(" ", "").strip()
+    if "," in text and "." in text:
+        return text.replace(",", "")
+    if text.count(",") == 1 and len(text.split(",")[1]) <= 2:
+        return text.replace(",", ".")
+    return text.replace(",", "")
 
 
 def normalize_level(value: Any) -> str:
