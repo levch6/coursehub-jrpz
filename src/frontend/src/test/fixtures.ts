@@ -1,4 +1,5 @@
 import type { CourseApi } from '../api/courseApi';
+import { ApiError } from '../api/http';
 import type { Course } from '../types/course';
 
 export function makeCourse(overrides: Partial<Course> = {}): Course {
@@ -26,7 +27,7 @@ export function makeFakeApi(courses: Course[]): CourseApi {
     list: async () => ({ count: courses.length, next: null, previous: null, results: courses }),
     get: async (id) => {
       const found = courses.find((course) => course.id === id);
-      if (!found) throw new Error('not found');
+      if (!found) throw new ApiError(404, 'not found');
       return found;
     },
   };
