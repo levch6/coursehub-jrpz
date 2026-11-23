@@ -64,8 +64,22 @@ Scrum-дошки в Jira (проєкт CH).
 | Ширинга Андрій | Фронтенд-розробник | `src/frontend` | `feature/CH-23-frontend-skeleton` |
 | Міліщук Сергій | Розробник збирачів даних і тестувальник | `src/backend/collectors`, `tests/collectors` | `feature/CH-14-collectors-base` |
 
-Внесок кожного учасника фіксується в історії комітів і pull request своєї гілки. Правила гілок і
-рев'ю описано в [docs/git-workflow.md](docs/git-workflow.md).
+Правила гілок і рев'ю описано в [docs/git-workflow.md](docs/git-workflow.md).
+
+## Внесок учасників
+
+Кожен модуль розроблявся у власній гілці й потрапив у `main` через pull request з попереднім
+рев'ю, зеленим CI і merge-комітом. Кількість рядків наведено без `package-lock.json`.
+
+| Учасник | Модуль | Гілка | Pull request | Jira | Комітів | Обсяг змін |
+|---|---|---|---|---|---|---|
+| Міліщук Сергій | Збирачі даних `collectors`: `CourseDTO`, `Fetcher`, `CourseCollector`, `PagedJsonCollector`, збирачі Udemy, Coursera, edX, `CollectorRegistry`; 89 тестів | `feature/CH-14-collectors-base` | [#2](https://github.com/levch6/coursehub-jrpz/pull/2) | CH-14 | 8 | 16 файлів, +953 |
+| Максименко Роман | Серверна частина: проєкт Django, застосунки `accounts`, `catalog`, `collection`, `administration`, `favorites`, міграції, API; 56 тестів | `feature/CH-12-backend-core` | [#1](https://github.com/levch6/coursehub-jrpz/pull/1) | CH-12, CH-13 | 11 | 70 файлів, +2161 |
+| Ширинга Андрій | Вебзастосунок на React і TypeScript: маршрутизація, компоненти, сторінки, клієнт API, переклади uk/en; 28 тестів | `feature/CH-23-frontend-skeleton` | [#3](https://github.com/levch6/coursehub-jrpz/pull/3) | CH-23 | 7 | 31 файл, +1235 |
+| Левченко Ренат | Docker Compose, Dockerfile, nginx, CI, документація `docs/`, README; виправлення залежностей Celery | `feature/CH-21-deploy-ci`, `fix/CH-22-celery-packaging` | [#4](https://github.com/levch6/coursehub-jrpz/pull/4), [#5](https://github.com/levch6/coursehub-jrpz/pull/5) | CH-21, CH-22, CH-28 | 9 + 1 | 11 файлів, +549 |
+
+Початковий каркас усіх модулів підготував керівник команди; далі кожен учасник рецензує та
+супроводжує свій модуль у власній гілці.
 
 ## Запуск
 
