@@ -71,13 +71,29 @@ Scrum-дошки в Jira (проєкт CH).
 
 ### Усі сервіси в Docker
 
+Цей варіант призначено лише для локальної розробки: сервіси працюють з налаштуваннями
+`config.settings.dev` (`DEBUG=True`, `ALLOWED_HOSTS=*`), тому nginx слухає тільки
+`127.0.0.1:80`. У робочому середовищі використовуються налаштування `config.settings.prod`
+(див. [docs/architecture.md](docs/architecture.md)).
+
 ```bash
 cp .env.example .env        # змініть DJANGO_SECRET_KEY і POSTGRES_PASSWORD
 docker compose up --build
 ```
 
+Значення `change-me` з `.env.example` придатні тільки для локального запуску; поза локальною
+розробкою їх обов'язково треба замінити. Якщо `POSTGRES_PASSWORD` порожній, `docker compose`
+зупиниться з повідомленням про помилку.
+
 Застосунок буде доступний на `http://localhost`, перевірка серверної частини за адресою
 `http://localhost/api/health/`.
+
+Адміністратора створюють у запущеному контейнері `web` (команда `createsuperuser` одразу
+призначає роль адміністратора):
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
 
 ### Локальна розробка без Docker
 
@@ -118,10 +134,10 @@ cd src/frontend && npm run typecheck && npm test && npm run build
 | `POST /api/auth/register/`, `POST /api/auth/token/` | реєстрація та вхід (JWT) | усі |
 | `GET /api/courses/`, `GET /api/courses/{id}/` | каталог із пошуком `q`, фільтрами `platform`, `category`, `max_price`, `min_rating` і сортуванням `ordering` | усі |
 | `GET /api/categories/` | категорії | усі |
-| `GET /api/favorites/`, `POST /api/favorites/`, `DELETE /api/favorites/{id}/` | обране | авторизовані |
+| `GET /api/favorites/`, `POST /api/favorites/`, `DELETE /api/favorites/{id}/` | обране (без прихованих курсів) | авторизовані |
 | `GET /api/admin/stats/`, `GET /api/admin/collection/runs/` | статистика й журнал збору | адміністратор |
 | `POST /api/admin/collection/{platform}/run/` | ручний запуск збору | адміністратор |
-| `PATCH /api/admin/courses/{id}/` | редагування й приховування курсу | адміністратор |
+| `PATCH /api/admin/courses/{id}/` | редагування й приховування курсу (відредаговані назва, опис і категорія не перезаписуються наступним збором) | адміністратор |
 
 ## Документація
 
