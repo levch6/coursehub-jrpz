@@ -18,7 +18,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "created_at")
 
     def create(self, validated_data):
-        favorite, _ = Favorite.objects.get_or_create(
+        # Ознака created потрібна поданню, щоб повторне додавання повертало 200.
+        favorite, self.created = Favorite.objects.get_or_create(
             user=self.context["request"].user, course=validated_data["course"]
         )
         return favorite

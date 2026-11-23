@@ -19,9 +19,18 @@ def test_add_and_list_favorite(auth_api, user, course):
 
 
 def test_adding_twice_does_not_duplicate(auth_api, user, course):
-    auth_api.post("/api/favorites/", {"course_id": course.pk})
-    auth_api.post("/api/favorites/", {"course_id": course.pk})
+    first = auth_api.post("/api/favorites/", {"course_id": course.pk})
+    second = auth_api.post("/api/favorites/", {"course_id": course.pk})
+    assert (first.status_code, second.status_code) == (201, 200)
+    assert second.data["id"] == first.data["id"]
     assert Favorite.objects.filter(user=user).count() == 1
+
+
+def test_hidden_course_is_not_listed_in_favorites(auth_api, user, course):
+    Favorite.objects.create(user=user, course=course)
+    course.is_hidden = True
+    course.save()
+    assert auth_api.get("/api/favorites/").data["count"] == 0
 
 
 def test_remove_favorite(auth_api, user, course):
